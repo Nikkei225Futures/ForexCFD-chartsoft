@@ -35,8 +35,6 @@ int leverage = 100;
 int second, minute, hour, day;
 int lowestInit = 100000000;
 
-
-
 void setup() {
   size(1900, 1010);
   getCandles();
@@ -83,7 +81,7 @@ void draw() {
   delay(delay_time);
 }
 
-String[] times = {"M1", "M5", "M15", "M30", "H1", "H4", "H12", "D"};
+String[] times = {"M1", "M5", "M15", "M30", "H1", "H4", "H12", "D", "W", "M"};
 String[] insts = {"USDJPY", "EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "WTI", "BRENT", "XAUUSD", "XCUUSD", "DOW", "NSDQ", "S&P", "JPN225", "US30B"};
 String[] instsN = {"USD_JPY", "EUR_USD", "EUR_JPY", "GBP_USD", "GBP_JPY", "WTICO_USD", "BCO_USD", "XAU_USD", "XCU_USD", "US30_USD", "NAS100_USD", "SPX500_USD", "JP225_USD", "USB30Y_USD"};
 
@@ -99,8 +97,10 @@ void drawLayout() {
   } else {
     text("Market closed", 1600, 25);
   }
-
-  text(bid, 1300, 25);
+  
+  if(time != null){ 
+  text(time.substring(0, 10) + " " + time.substring(11, 19) + "(UTC-3)", 1350, 25); 
+  }
 
   textAlign(LEFT, CENTER);
   if (instrument != null) {
@@ -111,14 +111,14 @@ void drawLayout() {
   stroke(255);
   textAlign(CENTER, CENTER);
   textSize(20);
-  for (int i = 300; i <= 700; i += 50) {
-    line(i, 0, i, 50);
+  
+  for(int i = 1; i <= times.length; i++){
+    line(i * 50 + 300, 0, i * 50 + 300, 50);
+    text(times[i - 1], i * 50 + 325, 25);
   }
-
-  for (int i = 325, j = 0; i <= 675; i += 50, j++) {
-    text(times[j], i, 25);
-  }
-
+  
+  line((times.length + 1) * 50 + 300, 0, (times.length + 1) * 50 + 300, 50);
+  
   //instruments display
   textSize(15);
   for (int i = 1; i <= insts.length; i++) {
@@ -317,7 +317,6 @@ void getPriceHeightPerPx() {
 }
 
 
-
 boolean isRenewCandle() {
   if (granularity == "M1") {
     if (minute != minute()) {
@@ -351,9 +350,26 @@ boolean isRenewCandle() {
     if (day != day()) {
       return true;
     }
+  } else if (granularity == "W") {
+    if (day != day() && zll(year(), month(), day()) == 1) {
+      return true;
+    }
+  } else if (granularity == "M") {
+    if (day != day() && day() == 1){
+      return true;
+    }
   }
   return false;
 }
+
+int zll(int y, int m, int d) {
+  if (m < 3) {
+    y --;
+    m += 12;
+  }
+  return( y + y / 4 - y / 100 + y / 400 + (13 * m + 8) / 5 + d) % 7;
+}
+
 
 void drawPrice(float highest, float lowest) {
   float center  = (lowest + highest) / 2;
@@ -391,7 +407,7 @@ void clearArraylist() {
 
 void mousePressed() {
   for (int i = 0; i < times.length; i++) {
-    if (mouseX > i * 50 + 300 && mouseX < i * 50 + 350 && mouseY > 0 && mouseY < 50) {
+    if (mouseX > i * 50 + 350 && mouseX < i * 50 + 400 && mouseY > 0 && mouseY < 50) {
       granularity = times[i];
       clearArraylist();
       setup();
